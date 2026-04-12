@@ -2,13 +2,36 @@ import pygame
 
 pygame.init()
 
+#TELA PRINCIPAL
 LARGURA=900
 ALTURA=725
+
+#INFO HUD
 LARGURA_BARRA=400
 HP_CASTELO=100
 hp_atual=100
 ouro=100
 FONTE=pygame.font.SysFont('Arial', 28, True)
+
+#FILEIRAS/GRID
+FILEIRAS = [120,240,360,480]
+X_GRID = 150
+Y_GRID = 120
+GRID = {}
+DENTRO_GRID = False
+COLUNAS=10
+LINHAS=4
+for linha in range(LINHAS):
+    for coluna in range(COLUNAS):
+        x = X_GRID + coluna * 75
+        y = Y_GRID + linha * 120
+        GRID[(linha, coluna)] = {
+            'x': x,
+            'y': y,
+            'ocupado': False,
+            'torre': None
+        }
+
 
 tela = pygame.display.set_mode((LARGURA,ALTURA))
 pygame.display.set_caption('Kings Duty')
@@ -29,6 +52,17 @@ VERMELHO = (220, 50, 50)
 
 DOURADO = (212, 175, 55)
 
+#TORRES
+class Torres:
+    def __init__(self, posicao_x, fileira, altura_torre, tipo):
+        self.x = posicao_x
+        self.fileira = fileira
+        self.altura_torre = altura_torre
+        self.y = fileira + (120 / 2) - (altura_torre / 2)
+        self.tipo = tipo
+
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, VERMELHO, (self.x, self.y, 40, self.altura_torre))
 
 
 rodando = True
@@ -39,6 +73,19 @@ while rodando:
         if event.type == pygame.QUIT:
             rodando = False
 
+    #LER MOUSE 120-600 150-900
+    mouse_pos = pygame.mouse.get_pos()
+    mouse_x = mouse_pos[0]
+    mouse_y = mouse_pos[1]
+    coluna = (mouse_x - 150) // 75
+    linha = (mouse_y - 120) // 120
+    if 900 >= mouse_x >= 150 and 600 >= mouse_y >= 120:
+        DENTRO_GRID = True
+    else:
+        DENTRO_GRID = False
+
+
+    #SEÇÃO DE DESENHO
     tela.fill(AZUL)
 
     #CASTELO
@@ -60,6 +107,12 @@ while rodando:
     texto = FONTE.render(mensagem, False, DOURADO)
     tela.blit(texto, (135, 35))
 
+    if DENTRO_GRID and 3 >= linha >= 0 and 9 >= coluna >=0:
+        X=GRID[(linha, coluna)]['x']
+        Y=GRID[(linha, coluna)]['y']
+        destaque = pygame.Surface((75,120), pygame.SRCALPHA)
+        destaque.fill((255,255,255,80))
+        tela.blit(destaque, (X,Y))
 
     pygame.display.flip()
     clock.tick(60)
