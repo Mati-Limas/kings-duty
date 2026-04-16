@@ -13,6 +13,23 @@ hp_atual=100
 ouro=100
 FONTE=pygame.font.SysFont('Arial', 28, True)
 
+#TORRES
+TIPOS_TORRES = [
+    {'Nome': 'Fazendeiro', 'Custo': 50},
+    {'Nome': 'Arqueiro', 'Custo': 100},
+    {'Nome': 'Cavaleiro', 'Custo': 100}
+]
+class Torres:
+    def __init__(self, posicao_x, fileira, altura_torre, tipo):
+        self.x = posicao_x
+        self.fileira = fileira
+        self.altura_torre = altura_torre
+        self.y = fileira + (120 / 2) - (altura_torre / 2)
+        self.tipo = tipo
+
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, VERMELHO, (self.x, self.y, 40, self.altura_torre))
+
 #FILEIRAS/GRID
 FILEIRAS = [120,240,360,480]
 X_GRID = 150
@@ -32,6 +49,12 @@ for linha in range(LINHAS):
             'torre': None
         }
 
+#VARIAVEIS NECESSARIAS
+torre_selecionada = None
+NUM_TORRES = len(TIPOS_TORRES)
+LARGURA_BOTAO = (750 - 10 * (NUM_TORRES + 1)) / NUM_TORRES
+def x_botao(i):
+    return 150 + 10 + i * (LARGURA_BOTAO + 10)
 
 tela = pygame.display.set_mode((LARGURA,ALTURA))
 pygame.display.set_caption('Kings Duty')
@@ -52,18 +75,6 @@ VERMELHO = (220, 50, 50)
 
 DOURADO = (212, 175, 55)
 
-#TORRES
-class Torres:
-    def __init__(self, posicao_x, fileira, altura_torre, tipo):
-        self.x = posicao_x
-        self.fileira = fileira
-        self.altura_torre = altura_torre
-        self.y = fileira + (120 / 2) - (altura_torre / 2)
-        self.tipo = tipo
-
-    def desenhar(self, tela):
-        pygame.draw.rect(tela, VERMELHO, (self.x, self.y, 40, self.altura_torre))
-
 
 rodando = True
 
@@ -73,6 +84,19 @@ while rodando:
         if event.type == pygame.QUIT:
             rodando = False
 
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos() #
+            if 605 <= mouse_y <= 705 and 150 <= mouse_x <= 750:
+                for i, torre in enumerate(TIPOS_TORRES):
+                    if x_botao(i) <= mouse_x <= x_botao(i)+LARGURA_BOTAO:
+                        torre_selecionada = torre['Nome']
+                        break
+
+            if DENTRO_GRID and torre_selecionada:
+                coluna = (mouse_x - 150) // 75
+                linha = (mouse_y - 120) // 120
+
+
     #LER MOUSE 120-600 150-900
     mouse_pos = pygame.mouse.get_pos()
     mouse_x = mouse_pos[0]
@@ -81,8 +105,6 @@ while rodando:
     linha = (mouse_y - 120) // 120
     if 900 >= mouse_x >= 150 and 600 >= mouse_y >= 120:
         DENTRO_GRID = True
-    else:
-        DENTRO_GRID = False
 
 
     #SEÇÃO DE DESENHO
@@ -104,6 +126,11 @@ while rodando:
     pygame.draw.rect(tela, MARROM_MADEIRA, (0,0, 900, 80))
     pygame.draw.rect(tela, VERMELHO, (250, 20, largura_barra, 40))
     pygame.draw.circle(tela, DOURADO, (100, 40), 20)
+    #BOTÕES DAS TORRES
+    for i in range(0,3):
+        x = x_botao(i)
+        pygame.draw.rect(tela, DOURADO, (x, 605, LARGURA_BOTAO, 100))
+
     texto = FONTE.render(mensagem, False, DOURADO)
     tela.blit(texto, (135, 35))
 
