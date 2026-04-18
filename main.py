@@ -19,17 +19,6 @@ TIPOS_TORRES = [
     {'Nome': 'Arqueiro', 'Custo': 100},
     {'Nome': 'Cavaleiro', 'Custo': 100}
 ]
-class Torres:
-    def __init__(self, posicao_x, fileira, altura_torre, tipo):
-        self.x = posicao_x
-        self.fileira = fileira
-        self.altura_torre = altura_torre
-        self.y = fileira + (120 / 2) - (altura_torre / 2)
-        self.tipo = tipo
-
-    def desenhar(self, tela):
-        pygame.draw.rect(tela, VERMELHO, (self.x, self.y, 40, self.altura_torre))
-
 #FILEIRAS/GRID
 FILEIRAS = [120,240,360,480]
 X_GRID = 150
@@ -55,26 +44,69 @@ NUM_TORRES = len(TIPOS_TORRES)
 LARGURA_BOTAO = (750 - 10 * (NUM_TORRES + 1)) / NUM_TORRES
 def x_botao(i):
     return 150 + 10 + i * (LARGURA_BOTAO + 10)
+torres_ativas = []
+
 
 tela = pygame.display.set_mode((LARGURA,ALTURA))
 pygame.display.set_caption('Kings Duty')
 clock = pygame.time.Clock()
 
 #CORES
+#cores campo
 VERDE_CLARO = (80, 160, 60)
 VERDE_ESCURO = (34, 100, 34)
 
+#cor castelo
 CINZA = (120, 120, 120)
 
+#cor HUD
 MARROM_TERRA = (139, 69 ,19)
 MARROM_MADEIRA = (92, 51, 23)
-
-AZUL = (135, 206, 235)
-
 VERMELHO = (220, 50, 50)
-
 DOURADO = (212, 175, 55)
 
+#cor céu
+AZUL = (135, 206, 235)
+
+#CORES TORRES
+CORPO_VERDE_CLARO = (110, 180, 90)
+CORPO_VERDE_ESCURO = (50, 120, 50)
+CORPO_FAZENDEIRO = (196, 135, 58)
+CHAPEU_FAZENDEIRO = (212,168,75)
+COPA_CHAPEU = (184, 137, 46)
+PELE_TORRE = (205, 160, 115)
+CORPO_CAVALEIRO = (128, 144, 168)
+CAPACETE = (106, 120, 136)
+VISEIRA_CLARA = (58, 72, 88)
+VISEIRA_ESCURA = (26, 40, 56)
+PLUMA = (200, 48, 48)
+
+class Torres:
+    def __init__(self, posicao_x, posicao_y, altura_torre, tipo):
+        self.x = posicao_x
+        self.y = posicao_y
+        self.altura_torre = altura_torre
+        self.y = posicao_y + (120 / 2) - (altura_torre / 2)
+        self.tipo = tipo
+
+    def desenhar(self, tela):
+        if self.tipo == 'Arqueiro':
+            #corpo
+            pygame.draw.circle(tela, CORPO_VERDE_CLARO, [self.x+35, self.y+25], 30)
+            pygame.draw.circle(tela, CORPO_VERDE_ESCURO, [self.x+30, self.y+25], 25)
+            pygame.draw.circle(tela, PELE_TORRE, [self.x+32, self.y+25], 12)
+        elif self.tipo == 'Fazendeiro':
+            #corpo
+            pygame.draw.circle(tela, CORPO_FAZENDEIRO, [self.x+43, self.y+25], 30)
+            pygame.draw.circle(tela, CHAPEU_FAZENDEIRO, [self.x+35, self.y+25], 25)
+            pygame.draw.circle(tela, COPA_CHAPEU, [self.x+35, self.y+25], 10)
+        elif self.tipo == 'Cavaleiro':
+            #corpo
+            pygame.draw.circle(tela, CORPO_CAVALEIRO, [self.x+43, self.y+25], 36)
+            pygame.draw.circle(tela, CAPACETE, [self.x+35, self.y+25], 28)
+            pygame.draw.rect(tela, VISEIRA_CLARA, (self.x+37, self.y+14, 15, 25))
+            pygame.draw.rect(tela, VISEIRA_ESCURA, (self.x+39, self.y+17, 9, 17))
+            pygame.draw.ellipse(tela, PLUMA, (self.x+15, self.y+20, 20, 7))
 
 rodando = True
 
@@ -86,15 +118,22 @@ while rodando:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos() #
-            if 605 <= mouse_y <= 705 and 150 <= mouse_x <= 750:
+            if 605 <= mouse_y <= 705 and 150 <= mouse_x <= 890:
                 for i, torre in enumerate(TIPOS_TORRES):
                     if x_botao(i) <= mouse_x <= x_botao(i)+LARGURA_BOTAO:
                         torre_selecionada = torre['Nome']
                         break
 
-            if DENTRO_GRID and torre_selecionada:
+            if DENTRO_GRID and torre_selecionada is not None:
                 coluna = (mouse_x - 150) // 75
                 linha = (mouse_y - 120) // 120
+                celula = GRID[(linha, coluna)]
+                if not GRID[(linha,coluna)]['ocupado']:
+                    torres_ativas.append(Torres(celula['x'],celula['y'],60,torre_selecionada))
+                    GRID[(linha,coluna)]['ocupado'] = True
+                    torre_selecionada = None
+
+
 
 
     #LER MOUSE 120-600 150-900
@@ -105,6 +144,8 @@ while rodando:
     linha = (mouse_y - 120) // 120
     if 900 >= mouse_x >= 150 and 600 >= mouse_y >= 120:
         DENTRO_GRID = True
+    else:
+        DENTRO_GRID = False
 
 
     #SEÇÃO DE DESENHO
@@ -118,6 +159,10 @@ while rodando:
     pygame.draw.rect(tela, VERDE_CLARO, (150, 240, 750, 120))
     pygame.draw.rect(tela, VERDE_ESCURO, (150, 360, 750, 120))
     pygame.draw.rect(tela, VERDE_CLARO, (150, 480, 750, 120))
+
+    #TORRES
+    for torre in torres_ativas:
+        torre.desenhar(tela)
 
     #HUD
     proporcao_vida = hp_atual / HP_CASTELO
