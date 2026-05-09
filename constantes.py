@@ -62,3 +62,20 @@ for linha in range(LINHAS):
             'ocupado': False,
             'torre': None
         }
+#TIPOS INIMIGOS
+TIPOS_INIMIGOS = {
+    'orc':      {'hp': 100, 'velocidade': 2, 'dano': 10},
+    'cavaleiro':{'hp': 250, 'velocidade': 1, 'dano': 25},
+    'veloz':    {'hp': 50,  'velocidade': 4, 'dano': 5},
+    'troll':    {'hp': 800, 'velocidade': 1, 'dano': 50},
+}
+
+
+#ONDAS
+ONDAS = [['orc', 5],
+         ['troll', 1]]
+def carregar_onda(onda):
+    fila=[]
+    for c in range(ONDAS[onda][1]):
+        fila.append(ONDAS[onda][0])
+    return fila

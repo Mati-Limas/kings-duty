@@ -1,6 +1,8 @@
 import pygame
 from torres import Torres, TIPOS_TORRES
 from constantes import *
+from inimigos import Inimigos
+import random
 
 pygame.init()
 
@@ -10,10 +12,16 @@ FONTE=pygame.font.SysFont('Arial', 28, True)
 torre_selecionada = None
 NUM_TORRES = len(TIPOS_TORRES)
 LARGURA_BOTAO = (750 - 10 * (NUM_TORRES + 1)) / NUM_TORRES
-def x_botao(i):
-    return 150 + 10 + i * (LARGURA_BOTAO + 10)
+def x_botao(a):
+    return 150 + 10 + a * (LARGURA_BOTAO + 10)
 torres_ativas = []
+inimigos_ativos=[]
+onda_atual = 0
+timer_onda = 500
+timer_spawn = 150
+fila_spawn = []
 
+fila_spawn.extend(carregar_onda(onda_atual))
 
 tela = pygame.display.set_mode((LARGURA,ALTURA))
 pygame.display.set_caption('Kings Duty')
@@ -42,8 +50,18 @@ while rodando:
                     torres_ativas.append(Torres(celula['x'],celula['y'],60,torre_selecionada))
                     GRID[(linha,coluna)]['ocupado'] = True
                     torre_selecionada = None
-
-
+    if fila_spawn:
+        timer_spawn -= 1
+        if timer_spawn <= 0:
+            tipo = fila_spawn.pop(0)
+            fileira = random.choice(FILEIRAS)
+            inimigos_ativos.append(Inimigos(900, fileira, tipo))
+            timer_spawn = 150
+    timer_onda -= 1
+    if timer_onda <= 0 and onda_atual + 1 < len(ONDAS):
+        onda_atual += 1
+        fila_spawn.extend(carregar_onda(onda_atual))
+        timer_onda = 500
 
 
     #LER MOUSE 120-600 150-900
@@ -76,9 +94,11 @@ while rodando:
 
     #HUD
     proporcao_vida = hp_atual / HP_CASTELO
+    maximo = LARGURA_BARRA
     largura_barra = LARGURA_BARRA * proporcao_vida
     pygame.draw.rect(tela, MARROM_MADEIRA, (0,600, 900, 125))
     pygame.draw.rect(tela, MARROM_MADEIRA, (0,0, 900, 80))
+    pygame.draw.rect(tela, (0,0,0), (250, 20, maximo, 40))
     pygame.draw.rect(tela, VERMELHO, (250, 20, largura_barra, 40))
     pygame.draw.circle(tela, DOURADO, (100, 40), 20)
     #BOTÕES DAS TORRES
@@ -96,7 +116,17 @@ while rodando:
         destaque.fill((255,255,255,80))
         tela.blit(destaque, (X,Y))
 
+    for inimigo in inimigos_ativos:
+        Inimigos.mover(inimigo)
+    for inimigo in inimigos_ativos:
+        if inimigo.chegou:
+            hp_atual -= inimigo.dano
+        Inimigos.desenhar(inimigo, tela)
+
+    inimigos_ativos = [i for i in inimigos_ativos if i.vivo]
+
     pygame.display.flip()
     clock.tick(60)
 
+    print(fila_spawn)
 pygame.quit()
