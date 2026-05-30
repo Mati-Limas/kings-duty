@@ -2,6 +2,7 @@ import pygame
 from torres import Torres, TIPOS_TORRES
 from constantes import *
 from inimigos import Inimigos
+from projeteis import  Projetil
 import random
 
 pygame.init()
@@ -10,12 +11,14 @@ pygame.init()
 FONTE=pygame.font.SysFont('Arial', 28, True)
 #VARIAVEIS NECESSARIAS
 torre_selecionada = None
+dados = dict()
 NUM_TORRES = len(TIPOS_TORRES)
 LARGURA_BOTAO = (750 - 10 * (NUM_TORRES + 1)) / NUM_TORRES
 def x_botao(a):
     return 150 + 10 + a * (LARGURA_BOTAO + 10)
 torres_ativas = []
 inimigos_ativos=[]
+projeteis_ativos = []
 onda_atual = 0
 timer_onda = 500
 timer_spawn = 150
@@ -40,6 +43,7 @@ while rodando:
                 for i, torre in enumerate(TIPOS_TORRES):
                     if x_botao(i) <= mouse_x <= x_botao(i)+LARGURA_BOTAO:
                         torre_selecionada = torre['Nome']
+                        dados = next(t for t in TIPOS_TORRES if t['Nome'] == torre_selecionada)
                         break
 
             if DENTRO_GRID and torre_selecionada is not None:
@@ -47,7 +51,7 @@ while rodando:
                 linha = (mouse_y - 120) // 120
                 celula = GRID[(linha, coluna)]
                 if not GRID[(linha,coluna)]['ocupado']:
-                    torres_ativas.append(Torres(celula['x'],celula['y'],60,torre_selecionada))
+                    torres_ativas.append(Torres(celula['x'],celula['y'],60,torre_selecionada, dados['hp']))
                     GRID[(linha,coluna)]['ocupado'] = True
                     torre_selecionada = None
     if fila_spawn:
@@ -91,6 +95,27 @@ while rodando:
     #TORRES
     for torre in torres_ativas:
         torre.desenhar(tela)
+        if torre.tipo == 'Fazendeiro':
+            torre.gerar_ouro()
+            if torre.gerou_ouro:
+                ouro += 25
+                torre.gerou_ouro = False
+        if torre.tipo == 'Arqueiro':
+            if torre.cooldown_tiro <= 0:
+                alvo = torre.atirar(inimigos_ativos)
+                if alvo:
+                    projeteis_ativos.append(Projetil(torre.x, torre.y, alvo))
+                    torre.cooldown_tiro = 60
+            else:
+                torre.cooldown_tiro -= 1
+
+    for projetil in projeteis_ativos:
+        projetil.desenhar(tela)
+        projetil.mover()
+        projetil.verificar_colisao()
+        if projetil.verificar_colisao():
+            projeteis_ativos.remove(projetil)
+
 
     #HUD
     proporcao_vida = hp_atual / HP_CASTELO
@@ -117,16 +142,28 @@ while rodando:
         tela.blit(destaque, (X,Y))
 
     for inimigo in inimigos_ativos:
+        inimigo.block = False
+        for torre in torres_ativas:
+            coluna_torre = (torre.x - 150) // 75
+            linha_torre = torre.fileira
+            if inimigo.y_fileira == torre.fileira:
+                if inimigo.posicao_x <= torre.x + 100:
+                    inimigo.block = True
+                    inimigo.atacar(torre)
+                    if torre.vida <= 0:
+                        torre.vivo = False
+                        GRID[(linha_torre, coluna_torre)]['ocupado'] = False
+
         Inimigos.mover(inimigo)
-    for inimigo in inimigos_ativos:
         if inimigo.chegou:
             hp_atual -= inimigo.dano
         Inimigos.desenhar(inimigo, tela)
 
-    inimigos_ativos = [i for i in inimigos_ativos if i.vivo]
 
+    torres_ativas = [t for t in torres_ativas if t.vivo]
+    inimigos_ativos = [i for i in inimigos_ativos if i.vivo]
+    projeteis_ativos = [p for p in projeteis_ativos if p.ativo]
     pygame.display.flip()
     clock.tick(60)
 
-    print(fila_spawn)
 pygame.quit()

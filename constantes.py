@@ -28,6 +28,15 @@ AZUL = (135, 206, 235)
 
 #CORES INIMIGOS
 VERDE_ORC = (85, 107, 47)
+VERDE_OLHOS = (48, 64, 44)
+TACAPE = (101, 67, 33)
+BRANCO_PRESAS = (214, 208, 196)
+VERDE_AZULADO_VELOZ = (52, 120, 88)
+VERMELHO_DESATURADO = (122, 68, 68)
+PRETO = (20, 20, 20)
+CINZA_ARMADURA = (120, 130, 140)
+CINZA_ESCURO = (70, 80, 90)
+
 #CORES TORRES
 #arqueiro
 CORPO_VERDE_CLARO = (110, 180, 90)
@@ -72,7 +81,7 @@ TIPOS_INIMIGOS = {
 
 
 #ONDAS
-ONDAS = [['orc', 5],
+ONDAS = [['veloz', 5],
          ['troll', 1]]
 def carregar_onda(onda):
     fila=[]

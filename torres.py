@@ -4,19 +4,26 @@ import math
 
 #TORRES
 TIPOS_TORRES = [
-    {'Nome': 'Fazendeiro', 'Custo': 50},
-    {'Nome': 'Arqueiro', 'Custo': 100},
-    {'Nome': 'Cavaleiro', 'Custo': 100}
+    {'Nome': 'Fazendeiro', 'Custo': 50, 'hp': 50},
+    {'Nome': 'Arqueiro', 'Custo': 100, 'hp': 100},
+    {'Nome': 'Cavaleiro', 'Custo': 100, 'hp': 200}
 ]
 
 #TORRES
 class Torres:
-    def __init__(self, posicao_x, posicao_y, altura_torre, tipo):
+    def __init__(self, posicao_x, posicao_y, altura_torre, tipo, hp):
         self.x = posicao_x
         self.y = posicao_y
         self.altura_torre = altura_torre
         self.y = posicao_y + (120 / 2) - (altura_torre / 2)
+        self.fileira = (posicao_y - 120) // 120
         self.tipo = tipo
+        self.vida = hp
+        self.vivo = True
+        self.timer = 450
+        self.gerou_ouro = False
+        self.timer_dano = 0
+        self.cooldown_tiro = 0
 
     def desenhar(self, tela):
         if self.tipo == 'Arqueiro':
@@ -44,3 +51,22 @@ class Torres:
             #item
             pygame.draw.ellipse(tela, MARROM_TERRA, (self.x+75, self.y, 10, 50))
             pygame.draw.ellipse(tela, MARROM_MADEIRA, (self.x+78, self.y+8, 10, 30))
+        if self.timer_dano > 0:
+            self.timer_dano -= 1
+            flash = pygame.Surface((75, 90), pygame.SRCALPHA)
+            flash.fill((0, 0, 0, 0))
+            pygame.draw.circle(flash, (220, 50, 50, 100), (40, 30), 35)
+            tela.blit(flash, (self.x, self.y))
+    def gerar_ouro(self):
+        self.timer -= 1
+        if self.timer == 0:
+            self.gerou_ouro = True
+            self.timer = 450
+
+    def atirar(self, inimigos: list):
+        inimigos_na_fileira = [i for i in inimigos if i.y_fileira == self.fileira and i.vivo]
+        if inimigos_na_fileira:
+            alvo = min(inimigos_na_fileira, key=lambda i: i.posicao_x)
+            return alvo
+        else:
+            return None
